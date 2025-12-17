@@ -1,9 +1,25 @@
 import { IonContent, IonHeader, IonPage, IonTitle, IonToolbar } from '@ionic/react';
 import { IonCard, IonCardContent, IonCardHeader, IonCardSubtitle, IonCardTitle } from '@ionic/react';
 import './Tab3.css';
+import { UserInfo } from '../interfaces/UserInfo';
+import { useState } from 'react';
+import { useIonViewDidEnter } from '@ionic/react';
+import { getUserInfo } from '../services/GithubServices';
 
 
 const Tab3: React.FC = () => {
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+
+  const loadUserInfo = async () => {
+    const info = await getUserInfo();
+    setUserInfo(info);
+    
+    
+  };
+
+  useIonViewDidEnter(() => {
+    loadUserInfo();
+  });
   return (
     <IonPage>
       <IonHeader>
@@ -18,15 +34,16 @@ const Tab3: React.FC = () => {
           </IonToolbar>
         </IonHeader>
         <IonCard>
-      <img alt="Silhouette of mountains" src="https://www.clubsportingcristal.pe/images/futbolprofesional2025/FOTO_RODRIGUEZ.png" />
+          <img alt={userInfo?.login} 
+          src={userInfo?.avatar_url} />
       <IonCardHeader>
-        <IonCardTitle>Mateo Rodriguez</IonCardTitle>
-        <IonCardSubtitle>Mateo-1402</IonCardSubtitle>
+        <IonCardTitle>{userInfo?.name}</IonCardTitle>
+        <IonCardSubtitle>{userInfo?.login}</IonCardSubtitle>
       </IonCardHeader>
 
       <IonCardContent>Here's a small text description for the card content. Nothing more, nothing less.</IonCardContent>
     </IonCard>
-  ;
+  
       </IonContent>
     </IonPage>
   );
