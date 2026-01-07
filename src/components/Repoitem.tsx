@@ -13,7 +13,6 @@ const RepoItem: React.FC<{repo: RepositoryItem}> = ({ repo }) => {
           <h2>{repo.name}</h2>
           <p>{repo.description}</p>
           <p>Propietario: {repo.language}</p>
-          <p>Lenguaje: {repo.language}</p> 
           </IonLabel>
     </IonItem>
     
