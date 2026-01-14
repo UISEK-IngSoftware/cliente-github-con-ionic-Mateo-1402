@@ -3,6 +3,6 @@ export interface RepositoryItem {
     description: string | null;
     imageUrl: string | null;
     owner: string |null;
-    language: string;
+    language: string | null;
 
 }

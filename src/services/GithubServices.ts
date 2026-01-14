@@ -37,7 +37,7 @@ export const fetchRepositories = async (): Promise<RepositoryItem[]> => {
             description:repo.description ? repo.description : null,
             imageUrl: repo.owner ? repo.owner.avatar_url : null,
             owner: repo.owner ? repo.owner.login : null,    
-            languaje: repo.language ? repo.language : null,
+            language: repo.language ? repo.language : null,
 
         }));
         return repositories;
@@ -55,6 +55,32 @@ export const createRepository = async (repo: RepositoryItem): Promise<void> => {
         console.log("Repositorio ingresado", response.data);
     } catch (error) {
         console.error("Error al crear repositorio", error);
+    }
+};
+
+// Elimina un repositorio: requiere owner y nombre del repositorio.
+export const deleteRepository = async (owner: string, repoName: string): Promise<boolean> => {
+    try {
+        await githubApi.delete(`/repos/${owner}/${repoName}`);
+        return true;
+    } catch (error) {
+        console.error('Error al eliminar repositorio', error);
+        return false;
+    }
+};
+
+// Edita un repositorio con los campos provistos (p. ej. { name, description })
+export const editRepository = async (
+    owner: string,
+    repoName: string,
+    data: { name?: string; description?: string }
+): Promise<any> => {
+    try {
+        const response = await githubApi.patch(`/repos/${owner}/${repoName}`, data);
+        return response.data;
+    } catch (error) {
+        console.error('Error al editar repositorio', error);
+        throw error;
     }
 };
 
