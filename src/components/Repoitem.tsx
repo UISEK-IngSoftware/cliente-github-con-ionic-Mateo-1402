@@ -14,19 +14,19 @@ import './Repoitem.css';
 import { RepositoryItem } from '../interfaces/RepositoryItem';
 import { deleteRepository, editRepository } from '../services/GithubServices';
 
-// RepoItem deslizable: permite hacer swipe para revelar opciones Editar/Eliminar.
+// Item deslizable: revela Editar/Eliminar
 const RepoItem: React.FC<{ repo: RepositoryItem; onRefresh?: () => void }> = ({ repo, onRefresh }) => {
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [showEditAlert, setShowEditAlert] = useState(false);
 
-  // Llama al servicio para eliminar; notifica al padre en caso de éxito
+  // Elimina y refresca
   const handleDelete = async () => {
     setShowDeleteAlert(false);
     const success = await deleteRepository(repo.owner, repo.name);
     if (success && onRefresh) onRefresh();
   };
 
-  // Llama al servicio para editar con datos del alert
+  // Edita con datos del alert
   const handleEdit = async (data: any) => {
     setShowEditAlert(false);
     const payload: { name?: string; description?: string } = {};
@@ -38,7 +38,7 @@ const RepoItem: React.FC<{ repo: RepositoryItem; onRefresh?: () => void }> = ({ 
 
   return (
     <>
-      {/* Contenedor deslizable: swipe hacia la izquierda revela opciones */}
+      {/* Item deslizable */}
       <IonItemSliding>
         <IonItem>
           <IonThumbnail slot="start">
@@ -51,7 +51,7 @@ const RepoItem: React.FC<{ repo: RepositoryItem; onRefresh?: () => void }> = ({ 
           </IonLabel>
         </IonItem>
 
-        {/* Opciones que aparecen al deslizar (lado derecho) */}
+        {/* Opciones */}
         <IonItemOptions side="end">
           <IonItemOption color="primary" onClick={() => setShowEditAlert(true)} title="Editar">
             <IonIcon slot="icon-only" icon={createOutline} />
@@ -62,7 +62,7 @@ const RepoItem: React.FC<{ repo: RepositoryItem; onRefresh?: () => void }> = ({ 
         </IonItemOptions>
       </IonItemSliding>
 
-      {/* Confirmación de eliminación */}
+      {/* Confirmar eliminación */}
       <IonAlert
         isOpen={showDeleteAlert}
         onDidDismiss={() => setShowDeleteAlert(false)}
@@ -71,7 +71,7 @@ const RepoItem: React.FC<{ repo: RepositoryItem; onRefresh?: () => void }> = ({ 
         buttons={[{ text: 'Cancelar', role: 'cancel' }, { text: 'Eliminar', handler: () => handleDelete() }]}
       />
 
-      {/* Edición rápida mediante alert con campos nombre y descripción */}
+      {/* Editar nombre y descripción */}
       <IonAlert
         isOpen={showEditAlert}
         onDidDismiss={() => setShowEditAlert(false)}

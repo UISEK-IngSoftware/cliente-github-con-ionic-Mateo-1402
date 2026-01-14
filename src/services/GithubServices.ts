@@ -58,7 +58,7 @@ export const createRepository = async (repo: RepositoryItem): Promise<void> => {
     }
 };
 
-// Elimina un repositorio: requiere owner y nombre del repositorio.
+// Elimina repo (owner, nombre)
 export const deleteRepository = async (owner: string, repoName: string): Promise<boolean> => {
     try {
         await githubApi.delete(`/repos/${owner}/${repoName}`);
@@ -69,7 +69,7 @@ export const deleteRepository = async (owner: string, repoName: string): Promise
     }
 };
 
-// Edita un repositorio con los campos provistos (p. ej. { name, description })
+// Edita repo (campos: name, description)
 export const editRepository = async (
     owner: string,
     repoName: string,
