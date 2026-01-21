@@ -9,10 +9,10 @@ const Tab1: React.FC = () => {
   const[repos,setRepos] = useState<RepositoryItem[]> ([]); 
 
   const loadRepos = async () => {
-
+    console.log("Recargando repositorios...");
     const reposData = await fetchRepositories(); 
+    console.log("Repositorios cargados:", reposData);
     setRepos(reposData);  
-
   }; 
 
   useIonViewDidEnter(() => { 
@@ -35,14 +35,17 @@ const Tab1: React.FC = () => {
           </IonToolbar>
         </IonHeader>
         <IonList> 
-          {repos.map(( repo, index) => (
-          <RepoItem 
-            key={index} 
-            repo={repo} 
-            onRefresh={loadRepos}
-            /> 
-          ))}
-
+          {repos.length > 0 ? (
+            repos.map(( repo, index) => (
+              <RepoItem 
+                key={`${repo.owner}-${repo.name}-${index}`} 
+                repo={repo} 
+                onRefresh={loadRepos}
+              /> 
+            ))
+          ) : (
+            <p style={{ padding: '20px', textAlign: 'center' }}>No hay repositorios</p>
+          )}
         </IonList>
 
 

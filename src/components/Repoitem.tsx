@@ -6,83 +6,138 @@ import {
   IonItem,
   IonLabel,
   IonThumbnail,
-  IonAlert,
   IonIcon,
+  IonAlert,
 } from '@ionic/react';
 import { createOutline, trashOutline } from 'ionicons/icons';
 import './Repoitem.css';
 import { RepositoryItem } from '../interfaces/RepositoryItem';
 import { deleteRepository, editRepository } from '../services/GithubServices';
 
-// Item deslizable: revela Editar/Eliminar
 const RepoItem: React.FC<{ repo: RepositoryItem; onRefresh?: () => void }> = ({ repo, onRefresh }) => {
-  const [showDeleteAlert, setShowDeleteAlert] = useState(false);
-  const [showEditAlert, setShowEditAlert] = useState(false);
+  const [showAlert, setShowAlert] = useState(false);
+  const [name, setName] = useState(repo.name);
+  const [description, setDescription] = useState(repo.description || '');
 
-  // Elimina y refresca
-  const handleDelete = async () => {
-    setShowDeleteAlert(false);
-    const success = await deleteRepository(repo.owner, repo.name);
-    if (success && onRefresh) onRefresh();
+  const handleEdit = () => {
+    setShowAlert(true);
   };
 
-  // Edita con datos del alert
-  const handleEdit = async (data: any) => {
-    setShowEditAlert(false);
-    const payload: { name?: string; description?: string } = {};
-    if (data.name && data.name !== repo.name) payload.name = data.name;
-    payload.description = data.description;
-    const res = await editRepository(repo.owner, repo.name, payload);
-    if (res && onRefresh) onRefresh();
+  const handleConfirmEdit = async () => {
+    if (repo.owner && name.trim()) {
+      try {
+        console.log('Intentando editar:', repo.owner, repo.name, { name, description });
+        const result = await editRepository(repo.owner, repo.name, {
+          name: name,
+          description: description,
+        });
+        console.log('Editado exitosamente:', result);
+        setShowAlert(false);
+        setTimeout(() => {
+          onRefresh?.();
+        }, 500);
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Error al editar');
+      }
+    } else {
+      alert('El nombre no puede estar vacío');
+    }
+  };
+
+  const handleDelete = async () => {
+    if (repo.owner) {
+      try {
+        await deleteRepository(repo.owner, repo.name);
+        onRefresh?.();
+      } catch (error) {
+        console.error('Error al eliminar:', error);
+      }
+    }
   };
 
   return (
-    <>
-      {/* Item deslizable */}
-      <IonItemSliding>
-        <IonItem>
-          <IonThumbnail slot="start">
-            <img src={repo.imageUrl || 'https://ionicframework.com/docs/demos/api/list/avatar-finn.png'} alt={repo.name} />
-          </IonThumbnail>
-          <IonLabel>
-            <h2>{repo.name}</h2>
-            <p>{repo.description}</p>
-            <p>Propietario: {repo.owner}</p>
-          </IonLabel>
-        </IonItem>
+    <IonItemSliding>
+      <IonItem>
+        <IonThumbnail slot="start">
+          <img src={repo.imageUrl || 'https://ionicframework.com/docs/demos/api/list/avatar-finn.png'} alt={repo.name} />
+        </IonThumbnail>
+        <IonLabel>
+          <h2>{name}</h2>
+          <p>{description}</p>
+          <p>Propietario: {repo.owner}</p>
+        </IonLabel>
+      </IonItem>
 
-        {/* Opciones */}
-        <IonItemOptions side="end">
-          <IonItemOption color="primary" onClick={() => setShowEditAlert(true)} title="Editar">
-            <IonIcon slot="icon-only" icon={createOutline} />
-          </IonItemOption>
-          <IonItemOption color="danger" onClick={() => setShowDeleteAlert(true)} title="Eliminar">
-            <IonIcon slot="icon-only" icon={trashOutline} />
-          </IonItemOption>
-        </IonItemOptions>
-      </IonItemSliding>
+      <IonItemOptions side="end">
+        <IonItemOption color="primary" onClick={handleEdit}>
+          <IonIcon slot="icon-only" icon={createOutline} />
+        </IonItemOption>
+        <IonItemOption color="danger" onClick={handleDelete}>
+          <IonIcon slot="icon-only" icon={trashOutline} />
+        </IonItemOption>
+      </IonItemOptions>
 
-      {/* Confirmar eliminación */}
       <IonAlert
-        isOpen={showDeleteAlert}
-        onDidDismiss={() => setShowDeleteAlert(false)}
-        header={'Confirmar eliminación'}
-        message={`¿Eliminar el repositorio "${repo.name}"? Esta acción no se puede deshacer.`}
-        buttons={[{ text: 'Cancelar', role: 'cancel' }, { text: 'Eliminar', handler: () => handleDelete() }]}
-      />
-
-      {/* Editar nombre y descripción */}
-      <IonAlert
-        isOpen={showEditAlert}
-        onDidDismiss={() => setShowEditAlert(false)}
-        header={'Editar repositorio'}
+        isOpen={showAlert}
+        onDidDismiss={() => {
+          setShowAlert(false);
+          setName(repo.name);
+          setDescription(repo.description || '');
+        }}
+        header="Editar Repositorio"
         inputs={[
-          { name: 'name', type: 'text', value: repo.name, placeholder: 'Nombre' },
-          { name: 'description', type: 'text', value: repo.description ?? '', placeholder: 'Descripción' },
+          {
+            name: 'name',
+            type: 'text',
+            placeholder: 'Nombre',
+            value: name,
+          },
+          {
+            name: 'description',
+            type: 'text',
+            placeholder: 'Descripción',
+            value: description,
+          },
         ]}
-        buttons={[{ text: 'Cancelar', role: 'cancel' }, { text: 'Guardar', handler: (data) => handleEdit(data) }]}
+        buttons={[
+          {
+            text: 'Cancelar',
+            role: 'cancel',
+          },
+          {
+            text: 'Guardar',
+            handler: (data: any) => {
+              // data contiene los inputs: data.name y data.description
+              const newName = (data && data.name) || '';
+              const newDescription = (data && data.description) || '';
+              // Llamada directa aquí para usar los valores editados por el alert
+              (async () => {
+                if (!repo.owner) {
+                  alert('Propietario no encontrado');
+                  return;
+                }
+                if (!newName.trim()) {
+                  alert('El nombre no puede estar vacío');
+                  return;
+                }
+                try {
+                  console.log('Editando desde alert:', repo.owner, repo.name, { newName, newDescription });
+                  await editRepository(repo.owner, repo.name, { name: newName, description: newDescription });
+                  setName(newName);
+                  setDescription(newDescription);
+                  setShowAlert(false);
+                  setTimeout(() => onRefresh?.(), 500);
+                } catch (err) {
+                  console.error('Error editando desde alert:', err);
+                  alert('Error al editar el repositorio');
+                }
+              })();
+            },
+          },
+        ]}
       />
-    </>
+    </IonItemSliding>
   );
 };
 

@@ -6,18 +6,23 @@ import AuthService from "./AuthService";
 const GITHUB_API_URL = import.meta.env.VITE_API_URL;
 
 const githubApi = axios.create({
-    baseURL: GITHUB_API_URL, 
+    baseURL: GITHUB_API_URL,
+    headers: {
+        Accept: 'application/vnd.github+json',
+    },
 }); 
 
 githubApi.interceptors.request.use((config) => { 
-    const AuthHeader = AuthService.getAuthHeaders(); 
-    if (AuthHeader) { 
-        config.headers.Authorization = AuthHeader; 
-    } 
+    const token = AuthService.getToken();
+    if (token) {
+        // Usar formato recomendado por GitHub: 'token <TOKEN>'
+        config.headers = config.headers || {};
+        config.headers.Authorization = `token ${token}`;
+    }
     return config; 
 }, (error) => {
     return Promise.reject(error);
-});     
+});    
 
 
 export const fetchRepositories = async (): Promise<RepositoryItem[]> => {
@@ -48,13 +53,20 @@ export const fetchRepositories = async (): Promise<RepositoryItem[]> => {
         }
     }
 
-export const createRepository = async (repo: RepositoryItem): Promise<void> => {
+export const createRepository = async (repo: RepositoryItem): Promise<boolean> => {
     try {
-        const response = await githubApi.post('/user/repos', repo);
-           
+        const payload = {
+            name: repo.name,
+            description: repo.description || '',
+            private: false,
+        };
+        console.log('Enviando repositorio a GitHub:', payload);
+        const response = await githubApi.post('/user/repos', payload);
         console.log("Repositorio ingresado", response.data);
+        return true;
     } catch (error) {
         console.error("Error al crear repositorio", error);
+        throw error;
     }
 };
 
@@ -76,7 +88,12 @@ export const editRepository = async (
     data: { name?: string; description?: string }
 ): Promise<any> => {
     try {
-        const response = await githubApi.patch(`/repos/${owner}/${repoName}`, data);
+        const response = await githubApi.patch(`/repos/${owner}/${repoName}`, data, {
+            headers: {
+                'Content-Type': 'application/json',
+            }
+        });
+        console.log('Respuesta del servidor:', response.data);
         return response.data;
     } catch (error) {
         console.error('Error al editar repositorio', error);
