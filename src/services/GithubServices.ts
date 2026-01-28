@@ -34,6 +34,7 @@ export const fetchRepositories = async (): Promise<RepositoryItem[]> => {
                 sort: "created",
                 direction: "desc",
                 affiliation: "owner",
+                t: Date.now(),  
             }
         });
         const repositories: RepositoryItem[]= response.data.map((repo: any) => ({
